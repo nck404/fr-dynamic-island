@@ -1,12 +1,10 @@
 const island = document.getElementById('dynamic-island');
 const body = document.body;
 
-// Collapsed elements
 const mainStatus = document.getElementById('main-status');
 const miniCpu = document.getElementById('mini-cpu');
 const miniRam = document.getElementById('mini-ram');
 
-// Expanded elements
 const albumImg = document.getElementById('album-img');
 const albumPlaceholder = document.getElementById('album-placeholder');
 const trackTitle = document.getElementById('track-title');
@@ -14,7 +12,6 @@ const trackArtist = document.getElementById('track-artist');
 const progressFill = document.getElementById('progress-fill');
 const sourceName = document.getElementById('source-name');
 
-// Detailed Stats Elements
 const cpuLoadDetail = document.getElementById('cpu-load-detail');
 const cpuNameDetail = document.getElementById('cpu-name-detail');
 const ramUsageDetail = document.getElementById('ram-usage-detail');
@@ -68,12 +65,10 @@ function updateUI(data) {
   const { media, system } = data;
   currentMedia = media;
 
-  // Update System Stats
   if (system) {
     if (miniCpu) miniCpu.textContent = `${system.cpu}%`;
     if (miniRam) miniRam.textContent = `${system.ram}%`;
     
-    // Detailed Expanded Stats
     if (cpuLoadDetail) cpuLoadDetail.textContent = `${system.cpu}%`;
     if (cpuNameDetail) cpuNameDetail.textContent = system.cpuName || 'PROCESSOR';
     
@@ -83,26 +78,21 @@ function updateUI(data) {
     if (tempDetail) tempDetail.textContent = `${system.temp}°C`;
   }
 
-  // Update Media
   if (media) {
     const isPlaying = media.playbackStatus === 'Playing';
     
-    // Toggle Playing class for animations
     if (isPlaying) {
       body.classList.add('playing');
     } else {
       body.classList.remove('playing');
     }
 
-    // Collapsed Title
     mainStatus.textContent = `${media.title} • ${media.artist}`;
     
-    // Expanded Metadata
     trackTitle.textContent = media.title;
     trackArtist.textContent = media.artist;
     sourceName.textContent = media.sourceApp || 'System Media';
 
-    // Thumbnail
     if (media.thumbnail) {
       albumImg.src = media.thumbnail;
       albumImg.style.display = 'block';
@@ -112,7 +102,6 @@ function updateUI(data) {
       albumPlaceholder.style.display = 'flex';
     }
 
-    // Progress
     if (media.duration > 0) {
       const per = (media.position / media.duration) * 100;
       progressFill.style.width = `${Math.min(per, 100)}%`;
@@ -128,7 +117,6 @@ function updateUI(data) {
   }
 }
 
-// Expand / Collapse
 island.addEventListener('mousedown', (e) => {
   if (isExpanded) return;
   isExpanded = true;
@@ -151,7 +139,6 @@ function collapse() {
   window.api.toggleExpand(false);
 }
 
-// Tab Switching
 const tabBtns = document.querySelectorAll('.tab-btn');
 const tabContents = document.querySelectorAll('.tab-content');
 
@@ -166,14 +153,12 @@ tabBtns.forEach(btn => {
   });
 });
 
-// Glow Intensity
 glowSlider.addEventListener('input', (e) => {
     const val = e.target.value / 100;
     document.documentElement.style.setProperty('--glow-intensity', val);
     localStorage.setItem('island-glow', val);
 });
 
-// Load Saved Preferences
 window.addEventListener('DOMContentLoaded', async () => {
     const savedColor = localStorage.getItem('island-accent');
     if (savedColor) {
@@ -188,9 +173,7 @@ window.addEventListener('DOMContentLoaded', async () => {
         document.documentElement.style.setProperty('--glow-intensity', savedGlow);
     }
 
-    // Initialize Gradient toggle
     const gradientBtn = document.getElementById('toggle-gradient');
-    // Default to true if not set
     const savedGradient = localStorage.getItem('island-gradient') !== 'false';
     
     function updateGradientUI(enabled) {
@@ -214,7 +197,6 @@ window.addEventListener('DOMContentLoaded', async () => {
         updateGradientUI(next);
     });
 
-    // Initialize Startup toggle
     const startupBtn = document.getElementById('toggle-startup');
     const isStartup = await window.api.getStartup();
     startupBtn.textContent = isStartup ? 'Enabled' : 'Disabled';
@@ -230,16 +212,13 @@ window.addEventListener('DOMContentLoaded', async () => {
         else startupBtn.classList.remove('active');
     });
 
-    // Contact link - open in browser
     if (contactLink) {
         contactLink.addEventListener('click', (e) => {
-            console.log('Contact button clicked, opening URL...');
             window.api.openExternal('https://e-z.bio/necakco');
         });
     }
 });
 
-// listeners
 window.api.onMediaUpdate((data) => {
   updateUI(data);
 });
@@ -248,7 +227,6 @@ window.api.onCollapse(() => {
   collapse();
 });
 
-// Scroll Indicators Logic
 const expandedBody = document.getElementById('expanded-body');
 const scrollUp = document.getElementById('scroll-up');
 const scrollDown = document.getElementById('scroll-down');
@@ -257,7 +235,6 @@ const scrollDown = document.getElementById('scroll-down');
 function updateScrollIndicators() {
     if (!expandedBody) return;
     
-    // Explicitly hide on Music tab (Now Playing)
     const musicTab = document.getElementById('music-tab');
     if (musicTab && musicTab.classList.contains('active')) {
         scrollUp.classList.remove('visible');
@@ -265,12 +242,10 @@ function updateScrollIndicators() {
         return;
     }
     
-    // Recalculate dimensions
     const scrollTop = expandedBody.scrollTop;
     const scrollHeight = expandedBody.scrollHeight;
     const clientHeight = expandedBody.clientHeight;
     
-    // Only show if content overflows
     if (scrollHeight <= clientHeight) {
         scrollUp.classList.remove('visible');
         scrollDown.classList.remove('visible');
@@ -279,15 +254,12 @@ function updateScrollIndicators() {
 
     const threshold = 5;
 
-    // Show UP if scrolled down
     if (scrollTop > threshold) {
         scrollUp.classList.add('visible');
     } else {
         scrollUp.classList.remove('visible');
     }
 
-    // Show DOWN if not at bottom
-    // scrollHeight - clientHeight = maxScrollTop
     if (scrollTop + clientHeight < scrollHeight - threshold) {
         scrollDown.classList.add('visible');
     } else {
@@ -295,15 +267,11 @@ function updateScrollIndicators() {
     }
 }
 
-// Attach listeners
 if (expandedBody) {
     expandedBody.addEventListener('scroll', updateScrollIndicators);
-    
-    // Check initially and on tab switch
     window.addEventListener('resize', updateScrollIndicators);
 }
 
-// Click handlers
 if (scrollUp) {
     scrollUp.addEventListener('click', () => {
         expandedBody.scrollBy({ top: -100, behavior: 'smooth' });
@@ -316,13 +284,10 @@ if (scrollDown) {
     });
 }
 
-// Hook into tab switching to re-check scroll state
 tabBtns.forEach(btn => {
     btn.addEventListener('mouseup', () => {
-        // slight delay to allow layout update
         setTimeout(updateScrollIndicators, 50);
     });
 });
 
-// Initial check
 setTimeout(updateScrollIndicators, 200);

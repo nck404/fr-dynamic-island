@@ -70,12 +70,10 @@ try {
     parentPort.postMessage({ type: 'update', media, system });
   };
 
-  // Poll every 3 seconds instead of 2 for better performance
   setInterval(async () => {
     await sendFullUpdate();
   }, 3000);
 
-  // Listen to media changes for instant updates
   monitor.on('session-media-changed', () => sendFullUpdate());
   monitor.on('session-playback-changed', () => sendFullUpdate());
   monitor.on('current-session-changed', () => sendFullUpdate());
