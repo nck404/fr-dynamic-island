@@ -41,11 +41,13 @@
     ],
     "asar": true,
     "win": {
-      "icon": "icon.ico",
+      "icon": "icon.png",
       "target": [
         {
           "target": "dir",
-          "arch": ["x64"]
+          "arch": [
+            "x64"
+          ]
         }
       ]
     }

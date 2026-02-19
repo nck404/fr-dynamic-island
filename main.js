@@ -1,11 +1,20 @@
-const { app, BrowserWindow, ipcMain, screen, Tray, Menu, nativeImage, shell } = require('electron');
-const path = require('path');
-const { exec, spawn } = require('child_process');
+const {
+  app,
+  BrowserWindow,
+  ipcMain,
+  screen,
+  Tray,
+  Menu,
+  nativeImage,
+  shell,
+} = require("electron");
+const path = require("path");
+const { exec, spawn } = require("child_process");
 
 app.disableHardwareAcceleration();
 
-app.commandLine.appendSwitch('enable-gpu-rasterization');
-app.commandLine.appendSwitch('enable-zero-copy');
+app.commandLine.appendSwitch("enable-gpu-rasterization");
+app.commandLine.appendSwitch("enable-zero-copy");
 
 let mainWindow;
 let tray;
@@ -19,7 +28,7 @@ async function createWindow() {
   const collapsedWidth = 300;
   const collapsedHeight = 100;
 
-  console.log('Creating window...');
+  console.log("Creating window...");
   mainWindow = new BrowserWindow({
     width: collapsedWidth,
     height: collapsedHeight,
@@ -32,27 +41,27 @@ async function createWindow() {
     resizable: false,
     hasShadow: false,
     focusable: true,
-    icon: path.join(__dirname, 'icon.ico'),
+    icon: path.join(__dirname, "icon.png"),
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
-      preload: path.join(__dirname, 'preload.js')
-    }
+      preload: path.join(__dirname, "preload.js"),
+    },
   });
 
   await mainWindow.webContents.session.clearCache();
-  
-  mainWindow.setAlwaysOnTop(true, 'screen-saver');
+
+  mainWindow.setAlwaysOnTop(true, "screen-saver");
   mainWindow.setVisibleOnAllWorkspaces(true);
   mainWindow.setIgnoreMouseEvents(false);
   mainWindow.setMenu(null);
 
-  mainWindow.loadFile('index.html');
+  mainWindow.loadFile("index.html");
 
-  mainWindow.on('blur', () => {
+  mainWindow.on("blur", () => {
     if (isExpanded) {
       isExpanded = false;
-      mainWindow.webContents.send('collapse');
+      mainWindow.webContents.send("collapse");
       resizeWindow(false);
     }
   });
@@ -62,40 +71,45 @@ function resizeWindow(expanded) {
   const primaryDisplay = screen.getPrimaryDisplay();
   const { width: screenWidth } = primaryDisplay.workAreaSize;
 
-  const targetWidth = expanded ? 480 : 300; 
-  const targetHeight = expanded ? 260 : 80;  
+  const targetWidth = expanded ? 480 : 300;
+  const targetHeight = expanded ? 260 : 80;
   const targetX = Math.round((screenWidth - targetWidth) / 2);
   const targetY = 0;
 
-  mainWindow.setBounds({
-    x: targetX,
-    y: targetY,
-    width: targetWidth,
-    height: targetHeight
-  }, true);
+  mainWindow.setBounds(
+    {
+      x: targetX,
+      y: targetY,
+      width: targetWidth,
+      height: targetHeight,
+    },
+    true,
+  );
 }
 
-const { Worker } = require('worker_threads');
+const { Worker } = require("worker_threads");
 
 let smtcWorker = null;
 
 function startMediaMonitoring() {
   if (smtcWorker) smtcWorker.terminate();
 
-  smtcWorker = new Worker(path.join(__dirname, 'smtc-worker.js'));
+  smtcWorker = new Worker(path.join(__dirname, "smtc-worker.js"));
 
-  smtcWorker.on('message', (msg) => {
-    if (msg.type === 'update') {
+  smtcWorker.on("message", (msg) => {
+    if (msg.type === "update") {
+      currentMediaInfo = msg.media || null;
+      updateTray(currentMediaInfo);
       if (mainWindow && !mainWindow.isDestroyed()) {
-        mainWindow.webContents.send('media-update', msg);
+        mainWindow.webContents.send("media-update", msg);
       }
-    } else if (msg.type === 'error') {
-      console.error('SMTC Worker Error:', msg.message);
+    } else if (msg.type === "error") {
+      console.error("SMTC Worker Error:", msg.message);
     }
   });
 
-  smtcWorker.on('error', (err) => {
-    console.error('SMTC Worker Thread Error:', err);
+  smtcWorker.on("error", (err) => {
+    console.error("SMTC Worker Thread Error:", err);
   });
 }
 
@@ -120,34 +134,84 @@ if ($session) { $null = $session.TrySkipNextAsync().GetAwaiter().GetResult() }`,
 Add-Type -AssemblyName System.Runtime.WindowsRuntime
 $manager = [Windows.Media.Control.GlobalSystemMediaTransportControlsSessionManager, Windows.Media.Control, ContentType = WindowsRuntime]::RequestAsync().GetAwaiter().GetResult()
 $session = $manager.GetCurrentSession()
-if ($session) { $null = $session.TrySkipPreviousAsync().GetAwaiter().GetResult() }`
+if ($session) { $null = $session.TrySkipPreviousAsync().GetAwaiter().GetResult() }`,
   };
 
   return new Promise((resolve) => {
-    const child = spawn('powershell.exe', [
-      '-NoProfile',
-      '-NonInteractive',
-      '-ExecutionPolicy', 'Bypass',
-      '-Command', commands[action] || ''
-    ], { windowsHide: true });
+    const child = spawn(
+      "powershell.exe",
+      [
+        "-NoProfile",
+        "-NonInteractive",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-Command",
+        commands[action] || "",
+      ],
+      { windowsHide: true },
+    );
 
-    child.on('close', () => resolve(true));
-    child.on('error', () => resolve(false));
-    setTimeout(() => { child.kill(); resolve(false); }, 5000);
+    child.on("close", () => resolve(true));
+    child.on("error", () => resolve(false));
+    setTimeout(() => {
+      child.kill();
+      resolve(false);
+    }, 5000);
   });
 }
 
-function createTray() {
-  const icon = nativeImage.createFromPath(path.join(__dirname, 'icon.ico'));
-  tray = new Tray(icon);
-  tray.setToolTip('Dynamic Island Music');
+function buildTrayMenu(mediaInfo) {
+  const nowPlaying = mediaInfo
+    ? `${mediaInfo.title} - ${mediaInfo.artist}`
+    : "Nothing playing";
 
-  const contextMenu = Menu.buildFromTemplate([
-    { label: 'Show', click: () => mainWindow.show() },
-    { type: 'separator' },
-    { label: 'Quit', click: () => app.quit() }
+  return Menu.buildFromTemplate([
+    { label: nowPlaying, enabled: false },
+    { type: "separator" },
+    { label: "Previous", click: () => controlMedia("previous") },
+    {
+      label: "Play / Pause",
+      click: () =>
+        controlMedia(
+          mediaInfo && mediaInfo.playbackStatus === "Playing"
+            ? "pause"
+            : "play",
+        ),
+    },
+    { label: "Next", click: () => controlMedia("next") },
+    { type: "separator" },
+    {
+      label: "Show",
+      click: () => {
+        mainWindow.show();
+        mainWindow.focus();
+      },
+    },
+    { type: "separator" },
+    { label: "Quit", click: () => app.quit() },
   ]);
-  tray.setContextMenu(contextMenu);
+}
+
+function createTray() {
+  const icon = nativeImage.createFromPath(path.join(__dirname, "icon.ico"));
+  tray = new Tray(icon);
+  tray.setToolTip("Frenda Dynamic Island");
+  tray.setContextMenu(buildTrayMenu(null));
+
+  tray.on("click", () => {
+    mainWindow.show();
+    mainWindow.focus();
+  });
+}
+
+function updateTray(mediaInfo) {
+  if (tray) {
+    const tooltip = mediaInfo
+      ? `${mediaInfo.title} - ${mediaInfo.artist}`
+      : "Frenda Dynamic Island";
+    tray.setToolTip(tooltip);
+    tray.setContextMenu(buildTrayMenu(mediaInfo));
+  }
 }
 
 app.whenReady().then(() => {
@@ -156,35 +220,35 @@ app.whenReady().then(() => {
   startMediaMonitoring();
 });
 
-ipcMain.on('toggle-expand', (event, expanded) => {
+ipcMain.on("toggle-expand", (event, expanded) => {
   isExpanded = expanded;
   resizeWindow(expanded);
 });
 
-ipcMain.on('media-control', async (event, action) => {
+ipcMain.on("media-control", async (event, action) => {
   await controlMedia(action);
 });
 
-ipcMain.handle('get-startup', () => {
+ipcMain.handle("get-startup", () => {
   return app.getLoginItemSettings().openAtLogin;
 });
 
-ipcMain.on('toggle-startup', (event, enabled) => {
+ipcMain.on("toggle-startup", (event, enabled) => {
   app.setLoginItemSettings({
     openAtLogin: enabled,
-    path: app.getPath('exe')
+    path: app.getPath("exe"),
   });
 });
 
-ipcMain.on('close-app', () => {
+ipcMain.on("close-app", () => {
   app.quit();
 });
 
-ipcMain.on('open-external', (event, url) => {
+ipcMain.on("open-external", (event, url) => {
   shell.openExternal(url);
 });
 
-app.on('window-all-closed', () => {
+app.on("window-all-closed", () => {
   if (smtcWorker) smtcWorker.terminate();
   app.quit();
 });
