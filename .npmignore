@@ -1,0 +1,31 @@
+# Build outputs
+dist/
+release-build/
+
+# Development files
+.git/
+.gitignore
+.vscode/
+*.md
+
+# Package manager files
+pnpm-lock.yaml
+package-lock.json
+node_modules/.ignored/
+node_modules/.pnpm/
+node_modules/.cache/
+
+# Dev dependencies (should be pruned but just in case)
+node_modules/electron/
+node_modules/electron-builder/
+node_modules/electron-packager/
+node_modules/app-builder-bin/
+node_modules/app-builder-lib/
+node_modules/7zip-bin/
+node_modules/typescript/
+node_modules/@types/
+node_modules/@electron/
+
+# Misc
+telemetry-id
+*.log

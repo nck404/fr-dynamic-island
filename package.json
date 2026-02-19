@@ -1,0 +1,62 @@
+{
+  "name": "frenda-di",
+  "version": "1.0.0",
+  "description": "frenda dynamic Island",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "dev": "electron . --dev",
+    "build": "electron-builder --win --x64",
+    "build:dir": "electron-builder --win --x64 --dir",
+    "build:packager": "electron-packager . --overwrite --platform=win32 --arch=x64 --out=release-build --prune=true --ignore=\"(dist|release-build|\\.git|node_modules/\\.cache)\""
+  },
+  "build": {
+    "appId": "com.frenda.dynamicisland",
+    "productName": "frenda-di",
+    "directories": {
+      "output": "release-build"
+    },
+    "icon": "icon.ico",
+    "files": [
+      "main.js",
+      "preload.js",
+      "renderer.js",
+      "smtc-worker.js",
+      "index.html",
+      "styles.css",
+      "package.json",
+      "icon.ico",
+      "node_modules/**/*",
+      "!node_modules/.ignored/**",
+      "!node_modules/.pnpm/**",
+      "!node_modules/electron/**",
+      "!node_modules/electron-builder/**",
+      "!node_modules/electron-packager/**",
+      "!node_modules/app-builder-bin/**",
+      "!node_modules/app-builder-lib/**",
+      "!node_modules/7zip-bin/**",
+      "!node_modules/typescript/**",
+      "!node_modules/@types/**",
+      "!node_modules/@electron/**"
+    ],
+    "asar": true,
+    "win": {
+      "icon": "icon.ico",
+      "target": [
+        {
+          "target": "dir",
+          "arch": ["x64"]
+        }
+      ]
+    }
+  },
+  "devDependencies": {
+    "electron": "^34.2.0",
+    "electron-builder": "^24.13.3",
+    "electron-packager": "^17.1.2"
+  },
+  "dependencies": {
+    "@coooookies/windows-smtc-monitor": "^1.0.12",
+    "systeminformation": "^5.31.0"
+  }
+}

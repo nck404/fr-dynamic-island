@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dynamic Island PC</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div id="wave-container">
+    <div class="glow-wave"></div>
+    <div class="glow-wave"></div>
+  </div>
+
+  <div id="dynamic-island" class="collapsed">
+    <div id="collapsed-view">
+      <div id="collapsed-media" class="side-content">
+        <div id="island-thumb-small">
+          <i class='bx bxs-music'></i>
+        </div>
+        <div class="island-media-bars">
+          <span></span><span></span><span></span>
+        </div>
+      </div>
+
+      <div id="collapsed-center">
+        <span id="main-status">Ready</span>
+      </div>
+
+      <div id="collapsed-stats" class="side-content">
+        <div class="mini-stat">
+          <i class='bx bxs-microchip'></i>
+          <span id="mini-cpu">--%</span>
+        </div>
+        <div class="mini-stat">
+          <i class='bx bxs-bolt'></i>
+          <span id="mini-ram">--%</span>
+        </div>
+      </div>
+    </div>
+
+    <div id="expanded-view">
+      <div id="expanded-header">
+        <div id="header-tabs">
+          <button class="tab-btn active" data-tab="music"><i class='bx bxs-music'></i> Now Playing</button>
+          <button class="tab-btn" data-tab="settings"><i class='bx bxs-cog'></i> Settings</button>
+          <button class="tab-btn" data-tab="contact"><i class='bx bx-support'></i> Contact</button>
+        </div>
+        <button id="close-btn"><i class='bx bx-x'></i></button>
+      </div>
+
+      <div id="expanded-body">
+        <!-- Tab: Music -->
+        <div id="music-tab" class="tab-content active">
+          <div class="media-layout">
+            <div id="album-container">
+              <img id="album-img" src="" style="display:none">
+              <div id="album-placeholder">
+                <i class='bx bxs-disc bx-spin-slow'></i>
+              </div>
+            </div>
+            <div class="media-details">
+              <div id="track-title">Not Playing</div>
+              <div id="track-artist">—</div>
+              <div id="source-badge">
+                <i class='bx bxl-windows'></i>
+                <span id="source-name">System Media</span>
+              </div>
+            </div>
+          </div>
+          
+          <div id="progress-container-minimal">
+            <div id="progress-rail"><div id="progress-fill"></div></div>
+          </div>
+
+          <!-- Compact Unified Stats Dashboard -->
+          <div id="unified-dashboard">
+            <div class="stat-card-compact">
+              <i class='bx bxs-component' style="color:var(--cpu-color)"></i>
+              <div class="stat-meta">
+                <span id="cpu-load-detail">--%</span>
+                <label id="cpu-name-detail">PROCESSOR</label>
+              </div>
+            </div>
+            <div class="stat-card-compact">
+              <i class='bx bxs-memory-card' style="color:var(--ram-color)"></i>
+              <div class="stat-meta">
+                <span id="ram-usage-detail">--%</span>
+                <label id="ram-info-detail">--/-- GB</label>
+              </div>
+            </div>
+            <div class="stat-card-compact">
+              <i class='bx bxs-thermometer' style="color:var(--temp-color)"></i>
+              <div class="stat-meta">
+                <span id="temp-detail">--°C</span>
+                <label>THERMAL</label>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tab: Settings -->
+        <div id="settings-tab" class="tab-content">
+          <div class="settings-grid">
+            <div class="setting-item">
+              <label>Accent Color</label>
+              <div class="color-presets">
+                <div class="color-dot active" style="background:#a78bfa" data-color="#a78bfa"></div>
+                <div class="color-dot" style="background:#f43f5e" data-color="#f43f5e"></div>
+                <div class="color-dot" style="background:#3b82f6" data-color="#3b82f6"></div>
+                <div class="color-dot" style="background:#10b981" data-color="#10b981"></div>
+                <div class="color-dot" style="background:#f59e0b" data-color="#f59e0b"></div>
+                <input type="color" id="custom-color-picker" value="#a78bfa">
+              </div>
+            </div>
+            <div class="setting-item">
+              <label>Glow intensity</label>
+              <input type="range" id="glow-slider" min="0" max="100" value="50">
+            </div>
+            <div class="setting-item">
+              <label>Gradient Line</label>
+              <button class="toggle-btn" id="toggle-gradient">Enabled</button>
+            </div>
+            <div class="setting-item">
+              <label>Start with Windows</label>
+              <button class="toggle-btn" id="toggle-startup">Disabled</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tab: Contact -->
+        <div id="contact-tab" class="tab-content">
+          <div class="contact-container">
+            <button class="contact-btn" id="contact-link">
+              <i class='bx bx-external-link'></i>
+              <span>Contact Support</span>
+            </button>
+            <p class="contact-hint">Click to open support page</p>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Scroll Indicators -->
+      <div id="scroll-up" class="scroll-indicator"><i class='bx bx-chevron-up'></i></div>
+      <div id="scroll-down" class="scroll-indicator"><i class='bx bx-chevron-down'></i></div>
+    </div>
+  </div>
+
+  <script src="renderer.js"></script>
+</body>
+</html>

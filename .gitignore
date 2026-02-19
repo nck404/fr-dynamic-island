@@ -1,0 +1,10 @@
+node_modules/
+release-build/
+dist/
+
+.vscode/
+*.log
+telemetry-id
+
+pnpm-lock.yaml
+package-lock.json
