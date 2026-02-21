@@ -30,6 +30,8 @@ body {
 body {
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
     user-select: none;
+    transform: translateZ(0);
+    backface-visibility: hidden;
 }
 
 /* Dynamic Island Base */
@@ -57,18 +59,27 @@ body {
     inset: -50%;
     background: conic-gradient(from 0deg,
             transparent,
-            rgba(255, 255, 255, 0.5),
+            rgba(255, 255, 255, 0.3),
             var(--accent-color),
             transparent 50%);
-    animation: border-rotate 8s linear infinite;
+    animation: border-rotate 10s linear infinite;
     z-index: -1;
-    opacity: 0.4;
+    opacity: 0.3;
     will-change: transform;
+    transform: translateZ(0);
+    backface-visibility: hidden;
+    pointer-events: none;
 }
 
 #dynamic-island.expanded::before {
-    animation-duration: 8s;
-    opacity: 0.4;
+    animation-duration: 10s;
+    opacity: 0.3;
+}
+
+/* Pause animations when window is not visible (via JS-added class) */
+body.idle #dynamic-island::before,
+body.idle .island-media-bars span {
+    animation-play-state: paused !important;
 }
 
 #dynamic-island.no-gradient::before {
@@ -180,23 +191,33 @@ body {
 
 .island-media-bars span {
     width: 2px;
+    height: 10px;
     background: var(--accent-color);
     border-radius: 1px;
+    transform: scaleY(0.4);
+    transform-origin: bottom;
 }
 
 .playing .island-media-bars span {
-    animation: bar-bounce 0.8s ease-in-out infinite;
+    animation: bar-bounce 1s ease-in-out infinite;
+    will-change: transform;
 }
+
+/* Stagger animations for bars */
+.playing .island-media-bars span:nth-child(1) { animation-delay: 0s; }
+.playing .island-media-bars span:nth-child(2) { animation-delay: 0.2s; }
+.playing .island-media-bars span:nth-child(3) { animation-delay: 0.1s; }
+.playing .island-media-bars span:nth-child(4) { animation-delay: 0.3s; }
 
 @keyframes bar-bounce {
 
     0%,
     100% {
-        height: 4px;
+        transform: scaleY(0.3);
     }
 
     50% {
-        height: 10px;
+        transform: scaleY(0.8);
     }
 }
 

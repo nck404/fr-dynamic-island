@@ -11,10 +11,10 @@ const {
 const path = require("path");
 const { exec, spawn } = require("child_process");
 
-app.disableHardwareAcceleration();
-
 app.commandLine.appendSwitch("enable-gpu-rasterization");
 app.commandLine.appendSwitch("enable-zero-copy");
+app.commandLine.appendSwitch("disable-software-rasterizer");
+app.commandLine.appendSwitch("enable-fast-unload");
 
 let mainWindow;
 let tray;
@@ -41,22 +41,47 @@ async function createWindow() {
     resizable: false,
     hasShadow: false,
     focusable: true,
+    paintWhenInitiallyHidden: false,
     icon: path.join(__dirname, "icon.png"),
+    show: false, // Don't show initially
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
       preload: path.join(__dirname, "preload.js"),
+      backgroundThrottling: true, // Enable throttling when hidden
+      enablePreferredSizeMode: true,
+      offscreen: false,
     },
   });
 
-  await mainWindow.webContents.session.clearCache();
+  mainWindow.loadFile("index.html");
+
+  // Limit frame rate to reduce GPU/CPU usage
+  mainWindow.webContents.on("did-finish-load", () => {
+    mainWindow.webContents.executeJavaScript(`
+      // Limit FPS to 30 to reduce resource usage
+      let lastTime = performance.now();
+      let fpsLimit = 30;
+      let frameInterval = 1000 / fpsLimit;
+
+      function throttleFPS() {
+        requestAnimationFrame((currentTime) => {
+          const elapsed = currentTime - lastTime;
+
+          if (elapsed > frameInterval) {
+            lastTime = currentTime - (elapsed % frameInterval);
+          }
+          throttleFPS();
+        });
+      }
+      throttleFPS();
+    `);
+  });
 
   mainWindow.setAlwaysOnTop(true, "screen-saver");
   mainWindow.setVisibleOnAllWorkspaces(true);
   mainWindow.setIgnoreMouseEvents(false);
   mainWindow.setMenu(null);
-
-  mainWindow.loadFile("index.html");
 
   mainWindow.on("blur", () => {
     if (isExpanded) {
@@ -83,7 +108,7 @@ function resizeWindow(expanded) {
       width: targetWidth,
       height: targetHeight,
     },
-    true,
+    false,
   );
 }
 
@@ -154,9 +179,9 @@ if ($session) { $null = $session.TrySkipPreviousAsync().GetAwaiter().GetResult()
     child.on("close", () => resolve(true));
     child.on("error", () => resolve(false));
     setTimeout(() => {
-      child.kill();
+      if (!child.killed) child.kill();
       resolve(false);
-    }, 5000);
+    }, 2000);
   });
 }
 
